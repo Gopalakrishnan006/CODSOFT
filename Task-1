@@ -1,3 +1,5 @@
+// Number Guessing Game // Coded by M.GOPALAKRISHNAN // For CodSoft Internship Task-1 //
+
 #include <iostream>
 #include <cstdlib>  
 #include <ctime>   
