@@ -1,7 +1,7 @@
 # CODSOFT
 
 
-Name: GOPALAKRISHNAN.M       
+Name: M.GOPALAKRISHNAN       
 Company: CODSOFT          
 ID: CS11WX291054         
 Domain: C++ Programming        
