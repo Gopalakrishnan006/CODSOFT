@@ -1,104 +1,141 @@
 // Tic-Tac-Toe Game // Coded by M.GOPALAKRISHNAN // For CodSoft Internship Task-3 //
 
 #include <iostream>
-using namespace std;
-
-const int SIZE = 3;
-
-void createBoard(char board[SIZE][SIZE]) {
-    for (int i = 0; i < SIZE; ++i)
-        for (int j = 0; j < SIZE; ++j)
-            board[i][j] = ' ';
-}
-
-void displayBoard(const char board[SIZE][SIZE]) {
-    for (int i = 0; i < SIZE; ++i) {
-        for (int j = 0; j < SIZE; ++j) {
-            cout << board[i][j];
-            if (j < SIZE - 1) cout << "|";
+#include <string>
+#include <cassert>
+class tictactoe_board {
+public:
+    tictactoe_board () :
+        empty_spaces(9),
+        winner(EMPTY)
+    {
+        for (int i = 0; i < 9; i++)
+            values[i] = EMPTY;
+    }
+    ~tictactoe_board() = default;
+    bool is_set (const int num) const { return values[num-1] != EMPTY; }
+    void set_cross (const int num) {
+        values[num-1] = CROSS;
+        --empty_spaces;
+    }
+    void set_circle (const int num) {
+        values[num-1] = CIRCLE;
+        --empty_spaces;
+    }
+    int suggest_empty_spot () const;
+    bool is_finished ();
+    bool is_cross_winner ();
+    bool is_circle_winner ();
+private:
+    enum cross_or_circle {
+        EMPTY = 0,
+        CROSS,
+        CIRCLE
+    };
+    bool is_full () const { return empty_spaces == 0; }
+    bool check_for_winner (cross_or_circle player) const;
+    void debug_values () const {
+        std::cout << "values: ";
+        for (int i = 0; i < 9; ++i)
+            std::cout << values[i] << " ";
+        std::cout << "\n";
+    }
+    static const char * const cross_or_circle_strings[3];
+    cross_or_circle values[9];
+    int empty_spaces;
+    cross_or_circle winner;
+};
+const char * const tictactoe_board::cross_or_circle_strings[3] = {"_","X","O"};
+void tictactoe_board::print () const {
+    int itr = 0;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            std::cout << cross_or_circle_strings[ values[itr++] ] << " ";
         }
-        cout << endl;
-        if (i < SIZE - 1) cout << "-----" << endl;
+        std::cout << "\n";
     }
 }
-
-bool checkWin(const char board[SIZE][SIZE], char player) {
-    for (int i = 0; i < SIZE; ++i) {
-        if (board[i][0] == player && board[i][1] == player && board[i][2] == player) return true;
-        if (board[0][i] == player && board[1][i] == player && board[2][i] == player) return true;
-    }
-    if (board[0][0] == player && board[1][1] == player && board[2][2] == player) return true;
-    if (board[0][2] == player && board[1][1] == player && board[2][0] == player) return true;
+int tictactoe_board::suggest_empty_spot() const {
+    assert(!is_full());
+    for (int i = 8; i >= 0; --i)
+        if (values[i] == EMPTY)
+            return i+1;
+    return -1;
+}
+bool tictactoe_board::check_for_winner (const cross_or_circle player) const {
+    for (int i = 0; i < 9; i += 3)
+        if (values[i] == player &&
+            values[i+1] == player &&
+            values[i+2] == player) {
+            return true;
+        }
+    for (int i = 0; i < 3; ++i)
+        if (values[i] == player &&
+            values[i+3] == player &&
+            values[i+6] == player) {
+            return true;
+        }
+    if (values[0] == player &&
+        values[4] == player &&
+        values[8] == player)
+        return true;
+    if (values[2] == player &&
+        values[4] == player &&
+        values[6] == player)
+        return true;
     return false;
 }
-
-bool checkDraw(const char board[SIZE][SIZE]) {
-    for (int i = 0; i < SIZE; ++i)
-        for (int j = 0; j < SIZE; ++j)
-            if (board[i][j] == ' ') return false;
-    return true;
+bool tictactoe_board::is_cross_winner () {
+    if (winner == CROSS)
+        return true;
+    if (check_for_winner (CROSS)) {
+        winner = CROSS;
+        return true;
+    }
+    return false;
 }
-
-void switchPlayer(char &currentPlayer) {
-    currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+bool tictactoe_board::is_circle_winner () {
+    if (winner == CIRCLE)
+        return true;
+    if (check_for_winner (CIRCLE)) {
+        winner = CIRCLE;
+        return true;
+    }
+    return false;
 }
-
-void getMove(int &row, int &col) {
-    cout << "Enter your move (row and column): ";
-    cin >> row >> col;
-    --row; --col;
+bool tictactoe_board::is_finished() {
+    return is_full() || is_cross_winner() || is_circle_winner();
 }
-
-void playGame() {
-    char board[SIZE][SIZE];
-    char currentPlayer = 'X';
-    bool gameWon = false, gameDraw = false;
-
-    createBoard(board);
-
-    while (true) {
-        displayBoard(board);
-        cout << "Player " << currentPlayer << "'s turn" << endl;
-
-        int row, col;
-        while (true) {
-            getMove(row, col);
-            if (row >= 0 && row < SIZE && col >= 0 && col < SIZE && board[row][col] == ' ') {
-                board[row][col] = currentPlayer;
-                break;
-            } else {
-                cout << "Invalid move. Try again." << endl;
+static void play_tictactoe () {
+    std::cout << "Welcome to Tic-Tac-Toe\nYou play crosses, the computer plays circles\n";
+    tictactoe_board board;
+    while (!board.is_finished()) {
+        board.print();
+        std::cout << "Press 1 to 9: ";
+        int num;
+        std::cin >> num;
+        if (num > 9 || num < 1)
+            std::cout << "Number is out of range, try again\n";
+        else if (board.is_set(num))
+            std::cout << "That spot is already taken, try something else\n";
+        else {
+            board.set_cross(num);
+            if (!board.is_finished()) {
+                board.set_circle(board.suggest_empty_spot());
             }
         }
-
-        gameWon = checkWin(board, currentPlayer);
-        if (gameWon) {
-            displayBoard(board);
-            cout << "Player " << currentPlayer << " wins!" << endl;
-            break;
-        }
-
-        gameDraw = checkDraw(board);
-        if (gameDraw) {
-            displayBoard(board);
-            cout << "It's a draw!" << endl;
-            break;
-        }
-
-        switchPlayer(currentPlayer);
+        std::cout << "\n";
     }
-
-    char playAgain;
-    cout << "Do you want to play again? (y/n): ";
-    cin >> playAgain;
-    if (playAgain == 'y' || playAgain == 'Y') {
-        playGame();
-    } else {
-        cout << "Thanks for playing!" << endl;
-    }
+    board.print();
+    std::cout << "Game over\n";
+    if (board.is_circle_winner())
+        std::cout << "Circle won\n";
+    else if (board.is_cross_winner())
+        std::cout << "Cross won\n";
+    else
+        std::cout << "No winner\n";
 }
-
-int main() {
-    playGame();
+int main () {
+    play_tictactoe();
     return 0;
 }
